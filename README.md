@@ -26,4 +26,5 @@ Static Bootstrap website for ARAM export business. Start with [index.html](index
 ## Folder Structure
 - `css/` - Stylesheets
 - `js/` - Bootstrap and custom scripts
-- `image/` - Site images
+- `image/` - Site images  
+<!-- end -->
