@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", function () {
             try {
                 await submitToSheet(endpoint, contactDrawerForm);
 
-                setDrawerMessage("Thanks! Your inquiry has been captured.", "success");
+                setDrawerMessage("Submitted successfully. Our team will contact you soon.", "success");
                 contactDrawerForm.reset();
                 contactDrawerForm.classList.remove("was-validated");
                 updateNotesCounter();

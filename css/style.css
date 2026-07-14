@@ -73,8 +73,24 @@ body::after {
 
 .brand {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
+	align-items: center;
+	gap: 0.65rem;
 	text-decoration: none;
+}
+
+.brand-logo {
+	height: 56px;
+	width: auto;
+	max-width: 220px;
+	object-fit: contain;
+	display: block;
+}
+
+.brand-text {
+	display: flex;
+	flex-direction: column;
+	line-height: 1;
 }
 
 .brand-mark {
@@ -246,7 +262,7 @@ body::after {
 	margin: 0 0 1.1rem;
 	border-radius: 22px;
 	overflow: hidden;
-	border: 1px solid rgba(232, 193, 124, 0.24);
+	border: none;
 	box-shadow: 0 24px 40px rgba(0, 0, 0, 0.28);
 	position: relative;
 }
@@ -319,6 +335,11 @@ body::after {
 	object-fit: cover;
 	transform: scale(1.03);
 	transition: transform 0.8s ease;
+}
+
+.hero-image-wrap .hero-main-image {
+	object-fit: fill;
+	object-position: center;
 }
 
 .hero-image-wrap:hover img {
@@ -1186,7 +1207,7 @@ body::after {
 
 .hero-image-wrap {
 	box-shadow: 0 20px 36px rgba(9, 31, 27, 0.18);
-	border-color: #dceae4;
+	border: none;
 }
 
 .hero-badge {
