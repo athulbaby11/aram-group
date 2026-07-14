@@ -13,6 +13,9 @@ This project sends Contact Drawer form data to a Google Sheet using Google Apps 
    - Notes
    - Page URL
 
+4. Add one more sheet tab for backups:
+  - Sheet name: `Leads_Backup`
+
 ## 2) Create Apps Script Web App
 1. In the same sheet, open Extensions -> Apps Script.
 2. Replace default code with:
@@ -20,7 +23,8 @@ This project sends Contact Drawer form data to a Google Sheet using Google Apps 
 ```javascript
 function doPost(e) {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Leads');
     if (!sheet) {
       return ContentService
         .createTextOutput(JSON.stringify({ ok: false, message: 'Sheet not found' }))
@@ -36,6 +40,12 @@ function doPost(e) {
       } catch (err) {
         payload = {};
       }
+    }
+
+    // Honeypot field: if bot fills this hidden field, ignore submission.
+    if (payload.website && String(payload.website).trim()) {
+      return ContentService.createTextOutput(JSON.stringify({ result: 'ignored' }))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
     sheet.appendRow([
@@ -54,6 +64,59 @@ function doPost(e) {
       .createTextOutput(JSON.stringify({ ok: false, message: String(err) }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function backupLeads() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var source = ss.getSheetByName('Leads');
+  var backup = ss.getSheetByName('Leads_Backup');
+
+  if (!source || !backup) {
+    throw new Error('Leads or Leads_Backup sheet not found');
+  }
+
+  var values = source.getDataRange().getValues();
+  if (!values || values.length <= 1) {
+    return;
+  }
+
+  var timestamp = new Date().toISOString();
+  var rows = [];
+
+  for (var i = 1; i < values.length; i++) {
+    rows.push([timestamp].concat(values[i]));
+  }
+
+  if (backup.getLastRow() === 0) {
+    backup.appendRow([
+      'Backup Time',
+      'Timestamp',
+      'Full Name',
+      'Email',
+      'Phone',
+      'Notes',
+      'Page URL'
+    ]);
+  }
+
+  backup
+    .getRange(backup.getLastRow() + 1, 1, rows.length, rows[0].length)
+    .setValues(rows);
+}
+
+function setupBackupTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'backupLeads') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+
+  ScriptApp.newTrigger('backupLeads')
+    .timeBased()
+    .everyHours(12)
+    .create();
 }
 ```
 
@@ -76,7 +139,14 @@ Open `index.html` and set URL in form attribute:
 2. Submit Contact form.
 3. Verify new row in Google Sheet.
 
+## 6) Enable automatic backup every 12 hours
+1. In Apps Script, run `setupBackupTrigger` once.
+2. Accept Google permissions.
+3. Verify in Triggers page that `backupLeads` is scheduled every 12 hours.
+4. Check `Leads_Backup` sheet after the first run.
+
 ## Notes
 - If Google asks authorization during first deployment, allow it.
 - Every script update may require a new deployment version.
 - Keep field names unchanged in form (`fullName`, `email`, `phone`, `notes`).
+- Keep anti-bot fields unchanged (`captchaAnswer`, `website`).

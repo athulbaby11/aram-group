@@ -443,6 +443,12 @@
                     <label class="form-label" for="drawerNotes">Notes</label>
                     <textarea id="drawerNotes" name="notes" class="form-control" rows="4" placeholder="Mention products, quantity, and destination market" required></textarea>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label" for="drawerCaptcha">Captcha</label>
+                    <small id="drawerCaptchaQuestion" class="word-limit d-block mb-2">Security check:</small>
+                    <input id="drawerCaptcha" name="captchaAnswer" type="text" class="form-control" placeholder="Enter answer" required>
+                </div>
+                <input id="drawerWebsite" name="website" type="text" class="d-none" tabindex="-1" autocomplete="off" aria-hidden="true">
                 <p id="drawerFormMsg" class="drawer-form-msg" role="status" aria-live="polite"></p>
                 <button type="submit" class="btn btn-brand w-100">Submit</button>
             </form>

@@ -14,6 +14,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var notesInput = document.querySelector("#drawerNotes");
     var notesWordCount = document.querySelector("#notesWordCount");
     var drawerFormMsg = document.querySelector("#drawerFormMsg");
+    var captchaQuestion = document.querySelector("#drawerCaptchaQuestion");
+    var captchaInput = document.querySelector("#drawerCaptcha");
+    var honeypotInput = document.querySelector("#drawerWebsite");
+    var captchaExpectedAnswer = "";
     var isSubmitting = false;
     var revealTargets = document.querySelectorAll(
         ".hero-title, .hero-text, .hero-image-wrap, .hero-panel, .stat-card, .highlight-stage, .about-grid article, .image-card, .product-card, .category-card, .service-card, .focus-card, .focus-point, .step-card, .process-detail-card, .route-banner, .portal-card, .value-pill, .news-card, .contact-section .section-title, .contact-section .section-text, .contact-section .btn"
@@ -258,6 +262,25 @@ document.addEventListener("DOMContentLoaded", function () {
         drawerFormMsg.classList.toggle("is-success", type === "success");
     }
 
+    function generateCaptchaChallenge() {
+        if (!captchaQuestion) {
+            return;
+        }
+
+        var first = Math.floor(Math.random() * 8) + 2;
+        var second = Math.floor(Math.random() * 8) + 2;
+        captchaExpectedAnswer = String(first + second);
+        captchaQuestion.textContent = "Security check: " + String(first) + " + " + String(second) + " = ?";
+    }
+
+    function isCaptchaValid() {
+        if (!captchaInput || !captchaExpectedAnswer) {
+            return true;
+        }
+
+        return captchaInput.value.trim() === captchaExpectedAnswer;
+    }
+
     function submitToSheet(endpoint, formElement) {
         var formData = new FormData(formElement);
         var data = {};
@@ -283,6 +306,19 @@ document.addEventListener("DOMContentLoaded", function () {
         return /^https:\/\/script\.google\.com\/macros\/s\/.+\/(exec|dev)(?:\?.*)?$/i.test(endpoint);
     }
 
+    if (captchaInput) {
+        captchaInput.addEventListener("input", function () {
+            if (drawerFormMsg && drawerFormMsg.classList.contains("is-error")) {
+                drawerFormMsg.textContent = "";
+                drawerFormMsg.classList.remove("is-error");
+            }
+        });
+    }
+
+    if (contactDrawerForm) {
+        generateCaptchaChallenge();
+    }
+
     if (contactDrawerForm) {
         contactDrawerForm.addEventListener("submit", async function (event) {
             event.preventDefault();
@@ -298,6 +334,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (!isNotesValid) {
                 setDrawerMessage("Notes field allows only 50 words.", "error");
+                return;
+            }
+
+            if (honeypotInput && honeypotInput.value.trim()) {
+                setDrawerMessage("Submitted successfully. Our team will contact you soon.", "success");
+                contactDrawerForm.reset();
+                contactDrawerForm.classList.remove("was-validated");
+                updateNotesCounter();
+                generateCaptchaChallenge();
+                return;
+            }
+
+            if (!isCaptchaValid()) {
+                setDrawerMessage("Captcha answer is incorrect. Please try again.", "error");
+
+                if (captchaInput) {
+                    captchaInput.value = "";
+                }
+
+                generateCaptchaChallenge();
                 return;
             }
 
@@ -327,6 +383,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 contactDrawerForm.reset();
                 contactDrawerForm.classList.remove("was-validated");
                 updateNotesCounter();
+                generateCaptchaChallenge();
             } catch (error) {
                 console.error("Sheet submission failed:", error);
                 if (error && error.message && error.message.indexOf("Failed to fetch") !== -1) {
